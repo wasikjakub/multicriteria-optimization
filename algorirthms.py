@@ -46,16 +46,16 @@ def dominated_points_filtration(X):
         Y = X[i]
         j = i + 1
         while j < len(X):
-            if Y <= X[j]:
+            if Y[0] <= X[j][0] and Y[1] <= X[j][1]:
                 X.pop(j) 
-            elif X[j] <= Y:
+            elif X[j][0] <= Y[0] and X[j][1] <= Y[1]:
                 X.pop(i)
                 Y = X[j]
             else:
                 j += 1
         P.append(Y)
     
-        X = [point for point in X if not (Y <= point)]
+        X = [point for point in X if not (Y[0] <= point[0] and Y[1] <= point[1])]
         if len(X) == 1:
             P.append(X[0])
             break
