@@ -1,42 +1,5 @@
 from typing import List
 import numpy as np
-
-class MyTuple:
-    def __init__(self, *args):
-        self.data = tuple(args)
-
-    def __lt__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return all(x < y for x, y in zip(self.data, other.data))
-        return NotImplemented
-
-    def __le__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return all(x <= y for x, y in zip(self.data, other.data))
-        return NotImplemented
-
-    def __gt__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return all(x > y for x, y in zip(self.data, other.data))
-        return NotImplemented
-
-    def __ge__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return all(x >= y for x, y in zip(self.data, other.data))
-        return NotImplemented
-
-    def __eq__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return all(x == y for x, y in zip(self.data, other.data))
-        return NotImplemented
-
-    def __ne__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return any(x != y for x, y in zip(self.data, other.data))
-        return NotImplemented
-    
-    def __repr__(self) -> str:
-        return f"{self.data}"
     
     
 def dominated_points_filtration(X):
