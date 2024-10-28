@@ -1,45 +1,7 @@
 from typing import List
 import numpy as np
-
-class MyTuple:
-    def __init__(self, *args):
-        self.data = tuple(args)
-
-    def __lt__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return all(x < y for x, y in zip(self.data, other.data))
-        return NotImplemented
-
-    def __le__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return all(x <= y for x, y in zip(self.data, other.data))
-        return NotImplemented
-
-    def __gt__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return all(x > y for x, y in zip(self.data, other.data))
-        return NotImplemented
-
-    def __ge__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return all(x >= y for x, y in zip(self.data, other.data))
-        return NotImplemented
-
-    def __eq__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return all(x == y for x, y in zip(self.data, other.data))
-        return NotImplemented
-
-    def __ne__(self, other):
-        if isinstance(other, MyTuple) and len(self.data) == len(other.data):
-            return any(x != y for x, y in zip(self.data, other.data))
-        return NotImplemented
     
-    def __repr__(self) -> str:
-        return f"{self.data}"
-    
-    
-def dominated_points_filtration(X):
+def dominated_points_filtration(X: list) -> list:
     P = [] 
     i = 0
     while i < len(X):
@@ -63,7 +25,7 @@ def dominated_points_filtration(X):
     return P
 
 
-def naive_without_filtration(X: List[int]) -> List[int]:
+def naive_without_filtration(X: list) -> list:
     P = []
     i = 0
     while i < len(X):
@@ -81,7 +43,6 @@ def naive_without_filtration(X: List[int]) -> List[int]:
                 j += 1
         if Y not in P:
             P.append(Y)
-        
         if fl == 0:
             del X[i]
         else:
@@ -91,22 +52,15 @@ def naive_without_filtration(X: List[int]) -> List[int]:
 
 def ideal_point_algorithm(X: list) -> list:
     P = []
-    
     X = np.array(X)
-    
     xmin = np.min(X, axis=0)
-    
     d = [np.sum((xmin - X[j]) ** 2) for j in range(len(X))]
-    
     sorted_indices = np.argsort(d)
-    
     remaining_points = X[sorted_indices].tolist()
     
     while remaining_points:
         current_point = remaining_points.pop(0)
-        
         P.append(current_point)
-        
         remaining_points = [
             point for point in remaining_points 
             if not all(np.array(current_point) <= np.array(point))
