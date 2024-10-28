@@ -1,12 +1,7 @@
 from typing import List
 import numpy as np
     
-<<<<<<< HEAD
 def dominated_points_filtration(X: list) -> list:
-=======
-    
-def dominated_points_filtration(X):
->>>>>>> ad7466053c8e7db13e9fe35b9857d3f66f6693d8
     P = [] 
     i = 0
     while i < len(X):
