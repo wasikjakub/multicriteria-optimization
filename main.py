@@ -4,7 +4,7 @@ import time
 import numpy as np
 from typing import List
 
-from algorirthms import MyTuple, naive_without_filtration, dominated_points_filtration, ideal_point_algorithm
+from algorirthms import naive_without_filtration, dominated_points_filtration, ideal_point_algorithm
 
 
 def dominated_points_filtration(X: List[tuple]) -> List[tuple]:
