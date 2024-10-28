@@ -1,8 +1,12 @@
 from typing import List
 import numpy as np
     
+<<<<<<< HEAD
+def dominated_points_filtration(X: list) -> list:
+=======
     
 def dominated_points_filtration(X):
+>>>>>>> ad7466053c8e7db13e9fe35b9857d3f66f6693d8
     P = [] 
     i = 0
     while i < len(X):
@@ -26,7 +30,7 @@ def dominated_points_filtration(X):
     return P
 
 
-def naive_without_filtration(X: List[int]) -> List[int]:
+def naive_without_filtration(X: list) -> list:
     P = []
     i = 0
     while i < len(X):
@@ -44,7 +48,6 @@ def naive_without_filtration(X: List[int]) -> List[int]:
                 j += 1
         if Y not in P:
             P.append(Y)
-        
         if fl == 0:
             del X[i]
         else:
@@ -54,22 +57,15 @@ def naive_without_filtration(X: List[int]) -> List[int]:
 
 def ideal_point_algorithm(X: list) -> list:
     P = []
-    
     X = np.array(X)
-    
     xmin = np.min(X, axis=0)
-    
     d = [np.sum((xmin - X[j]) ** 2) for j in range(len(X))]
-    
     sorted_indices = np.argsort(d)
-    
     remaining_points = X[sorted_indices].tolist()
     
     while remaining_points:
         current_point = remaining_points.pop(0)
-        
         P.append(current_point)
-        
         remaining_points = [
             point for point in remaining_points 
             if not all(np.array(current_point) <= np.array(point))
