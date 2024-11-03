@@ -328,7 +328,7 @@ class GUI:
         
         # Insert benchmark data into the Treeview
         for algo_name, exec_time, comparisons in benchmarks:
-            tree.insert("", "end", values=(algo_name, f"{exec_time:.2f}", comparisons))
+            tree.insert("", "end", values=(algo_name, f"{exec_time:.3f}", comparisons))
         
         # Pack and display the Treeview
         tree.pack(padx=10, pady=10, fill="both", expand=True)
