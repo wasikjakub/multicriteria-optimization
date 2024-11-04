@@ -3,8 +3,10 @@ from tkinter import ttk, messagebox
 import time
 import numpy as np
 from typing import List
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-from algorirthms import naive_without_filtration, dominated_points_filtration, ideal_point_algorithm, naive_without_filtration_max, dominated_points_filtration_max, ideal_point_algorithm_max
+from algorirthms import MyTuple, naive_without_filtration, dominated_points_filtration, ideal_point_algorithm, naive_without_filtration_max, dominated_points_filtration_max, ideal_point_algorithm_max
 
 
 # Define the Tkinter GUI
@@ -15,6 +17,7 @@ class GUI:
         
         # Initialize the points list
         self.points = []
+        self.output_points = []
         self.criterion = None
 
         # Input area for dataset configuration
@@ -125,8 +128,8 @@ class GUI:
         self.result_text.pack(pady=5)
         
         # Benchmark button
-        self.benchmark_button = ttk.Button(root, text="Benchmark algorithms", command=self.benchmark)
-        self.benchmark_button.pack(pady=10)
+        self.plot_button = ttk.Button(root, text="Plot", command=self.plot_button_action)
+        self.plot_button.pack(pady=10)
         
     def run_dominated(self):
         if self.criterion.get() == 'min':
@@ -134,12 +137,14 @@ class GUI:
             results, comparisons = dominated_points_filtration(self.points)
             elapsed_time = (time.time() - start) * 1000
             self.display_results(results)
+            self.output_points = results
             return elapsed_time, comparisons
         else:
             start = time.time()
             results, comparisons = dominated_points_filtration_max(self.points)
             elapsed_time = (time.time() - start) * 1000
             self.display_results(results)
+            self.output_points = results
             return elapsed_time, comparisons
     
     def run_naive(self):
@@ -148,12 +153,14 @@ class GUI:
             results, comparisons = naive_without_filtration(self.points)
             elapsed_time = (time.time() - start) * 1000
             self.display_results(results)
+            self.output_points = results
             return elapsed_time, comparisons
         else:
             start = time.time()
             results, comparisons = naive_without_filtration_max(self.points)
             elapsed_time = (time.time() - start) * 1000
             self.display_results(results)
+            self.output_points = results
             return elapsed_time, comparisons
     
     def run_ideal(self):
@@ -162,12 +169,14 @@ class GUI:
             results, comparisons = ideal_point_algorithm(self.points)
             elapsed_time = (time.time() - start) * 1000
             self.display_results(results)
+            self.output_points = results
             return elapsed_time, comparisons
         else:
             start = time.time()
             results, comparisons = ideal_point_algorithm_max(self.points)
             elapsed_time = (time.time() - start) * 1000
             self.display_results(results)
+            self.output_points = results
             return elapsed_time, comparisons
             
     def display_results(self, results):
@@ -332,6 +341,68 @@ class GUI:
         
         # Pack and display the Treeview
         tree.pack(padx=10, pady=10, fill="both", expand=True)
+
+    def plot_button_action(self):
+        # Wrapper function that calls plot_points with the correct arguments
+        self.plot_points(self.points, self.output_points)
+                
+    def plot_points(self, input_points, output_points):
+        '''
+        Plots input and output points in 2D or 3D.
+        Different colors are used for each distinct group in output points.
+
+        Parameters:
+            input_points (List[Tuple[float, ...]]): List of tuples representing input points.
+            output_points (List[Tuple[float, ...]]): List of tuples representing output points.
+        '''
+        # Helper function to convert MyTuple to a tuple
+        def to_tuple(point):
+            if isinstance(point, MyTuple):
+                return point.data  # Access the `data` attribute which contains the tuple
+            return point
+
+        # Convert MyTuple instances to tuples
+        input_points = [to_tuple(point) for point in input_points]
+        output_points = [to_tuple(point) for point in output_points]  # Treat output_points as a flat list
+
+        # Check dimensionality of points
+        is_3d = len(input_points[0]) == 3  # Assume points are consistent in dimensions
+
+        # Set up plot
+        fig = plt.figure()
+        if is_3d:
+            ax = fig.add_subplot(111, projection='3d')
+            ax.set_xlabel("X-axis")
+            ax.set_ylabel("Y-axis")
+            ax.set_zlabel("Z-axis")
+        else:
+            ax = fig.add_subplot(111)
+            ax.set_xlabel("X-axis")
+            ax.set_ylabel("Y-axis")
+
+        # Plot input points in blue
+        if is_3d:
+            ax.scatter([p[0] for p in input_points], [p[1] for p in input_points], [p[2] for p in input_points], 
+                    color='blue', label='Input Points', alpha=0.6)
+        else:
+            ax.scatter([p[0] for p in input_points], [p[1] for p in input_points], 
+                    color='blue', label='Input Points', alpha=0.6)
+
+        # Plot output points in a different color
+        if is_3d:
+            ax.scatter([p[0] for p in output_points], [p[1] for p in output_points], [p[2] for p in output_points], 
+                    color='red', label='Output Points', alpha=0.6)
+        else:
+            ax.scatter([p[0] for p in output_points], [p[1] for p in output_points], 
+                    color='red', label='Output Points', alpha=0.6)
+
+        # Add legend and show plot
+        plt.legend()
+        plt.show()
+
+
+
+
 
 
 # Initialize the GUI
