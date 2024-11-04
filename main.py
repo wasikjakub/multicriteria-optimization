@@ -127,9 +127,16 @@ class GUI:
         self.result_text = tk.Text(root, height=5, width=60)
         self.result_text.pack(pady=5)
         
+        button_frame = tk.Frame(root)
+        button_frame.pack(pady=20)  # Set padding for the frame
+
         # Benchmark button
-        self.plot_button = ttk.Button(root, text="Plot", command=self.plot_button_action)
-        self.plot_button.pack(pady=10)
+        benchmark_button = ttk.Button(button_frame, text="Benchmark algorithms", command=self.benchmark)
+        benchmark_button.pack(side="left", padx=10)
+
+        # Plot button
+        plot_button = ttk.Button(button_frame, text="Plot", command=self.plot_button_action)
+        plot_button.pack(side="right", padx=10)
         
     def run_dominated(self):
         if self.criterion.get() == 'min':
