@@ -1,3 +1,4 @@
+import matplotlib.cm as cm
 import tkinter as tk
 from tkinter import ttk, messagebox
 import time
@@ -9,31 +10,26 @@ from mpl_toolkits.mplot3d import Axes3D
 from algorirthms import MyTuple, naive_without_filtration, dominated_points_filtration, ideal_point_algorithm, naive_without_filtration_max, dominated_points_filtration_max, ideal_point_algorithm_max
 
 
-# Define the Tkinter GUI
 class GUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Non-Dominated Points Finder")
         
-        # Initialize the points list
         self.points = []
         self.output_points = []
         self.criterion = None
 
-        # Input area for dataset configuration
         self.dataset_label = ttk.Label(root, text="Enter Data Points (Python tuple format):")
         self.dataset_label.pack(pady=5)
         self.dataset_entry = ttk.Entry(root, width=50)
         self.dataset_entry.pack(pady=5)
         
-        # Button to show input data as a table
         self.show_input_button = ttk.Button(root, text="Show input data as a table", command=self.show_input)
         self.show_input_button.pack(pady=5)
         
         self.separator = ttk.Separator(root, orient="horizontal")
         self.separator.pack(fill="x", pady=10)
         
-        # Frame for generating random points
         self.random_frame = ttk.Frame(root)
         self.random_frame.pack(pady=10)
 
@@ -66,14 +62,11 @@ class GUI:
         self.generate_button = ttk.Button(self.random_frame, text="Generate Points", command=self.generate_points)
         self.generate_button.grid(row=1, column=5, padx=5)
 
-        # Table area for displaying tuples
         self.table_frame = ttk.Frame(root)
         self.table_frame.pack(pady=10, fill="x")
         
-        # Display initial table with any points
         self.display_table()
         
-        # Frame for adding points
         self.add_frame = ttk.Frame(root)
         self.add_frame.pack(pady=5)
 
@@ -82,7 +75,6 @@ class GUI:
         self.add_button = ttk.Button(self.add_frame, text="Add Point", command=self.add_point)
         self.add_button.grid(row=0, column=1, padx=5)
 
-        # Frame for updating points
         self.update_frame = ttk.Frame(root)
         self.update_frame.pack(pady=5)
 
@@ -91,29 +83,23 @@ class GUI:
         self.update_button = ttk.Button(self.update_frame, text="Update Selected Point", command=self.update_point)
         self.update_button.grid(row=0, column=1, padx=5)
         
-        # Button for deleting points
         self.delete_button = ttk.Button(self.update_frame, text="Delete Selected Point", command=self.delete_point)
         self.delete_button.grid(row=0, column=2, padx=5)
 
-        # Horizontal separator between update section and algorithm buttons
         self.separator = ttk.Separator(root, orient="horizontal")
         self.separator.pack(fill="x", pady=10)
         
-        # Frame for algorithm buttons
         self.buttons_frame = ttk.Frame(root)
         self.buttons_frame.pack(pady=5)
         
-        # Radio button variable to choose criterion mode
         self.criterion = tk.StringVar(value='min')
 
-        # Add radio buttons for min and max criteria
         self.min_button = ttk.Radiobutton(self.buttons_frame, text="Min criterion", value='min', variable=self.criterion)
         self.min_button.grid(row=0, column=0, padx=5)
-        self.min_button.invoke()  # Set default to min
+        self.min_button.invoke()  
         self.max_button = ttk.Radiobutton(self.buttons_frame, text="Max criterion", value='max', variable=self.criterion)
         self.max_button.grid(row=0, column=1, padx=5)
 
-        # Rename the buttons to avoid name conflict with methods
         self.run_naive_button = ttk.Button(self.buttons_frame, text="Algorytm bez filtracji", command=self.run_naive)
         self.run_naive_button.grid(row=1, column=0, padx=5)
         self.run_dominated_button = ttk.Button(self.buttons_frame, text="Algorytm z filtracją punktów zdominowanych", command=self.run_dominated)
@@ -121,20 +107,17 @@ class GUI:
         self.run_ideal_button = ttk.Button(self.buttons_frame, text="Algorytm oparty o punkt idealny", command=self.run_ideal)
         self.run_ideal_button.grid(row=1, column=2, padx=5)
         
-        # Display results
         self.result_label = ttk.Label(root, text="Results:")
         self.result_label.pack(pady=5)
         self.result_text = tk.Text(root, height=5, width=60)
         self.result_text.pack(pady=5)
         
         button_frame = tk.Frame(root)
-        button_frame.pack(pady=20)  # Set padding for the frame
+        button_frame.pack(pady=20)  
 
-        # Benchmark button
         benchmark_button = ttk.Button(button_frame, text="Benchmark algorithms", command=self.benchmark)
         benchmark_button.pack(side="left", padx=10)
 
-        # Plot button
         plot_button = ttk.Button(button_frame, text="Plot", command=self.plot_button_action)
         plot_button.pack(side="right", padx=10)
         
@@ -212,60 +195,48 @@ class GUI:
                 mean = float(self.mean_entry.get())
                 points = [tuple(np.round(np.random.poisson(mean, num_criteria), 2)) for _ in range(num_points)]
             
-            self.points.extend(points)  # Update points list
-            self.display_table()  # Refresh the table with new points
+            self.points.extend(points)  
+            self.display_table()  
         except ValueError as e:
             messagebox.showerror("Error", f"Invalid input: {e}")
     
     def display_table(self):
-        # Clear previous table if it exists
         for widget in self.table_frame.winfo_children():
             widget.destroy()
         
-        # Determine the number of columns based on the tuple size, defaulting to 2 if empty
         num_columns = len(self.points[0]) if self.points else 2
         columns = ["Index"] + [f"Criterion {i + 1}" for i in range(num_columns)]
 
-        # Create Treeview widget
         self.tree = ttk.Treeview(self.table_frame, columns=columns, show="headings")
         self.tree.heading("Index", text="Index")
         self.tree.column("Index", anchor="center", width=50)
 
-        # Configure each coordinate column and bind header clicks to sort function
         for i, col in enumerate(columns[1:], start=1):
             self.tree.heading(col, text=col, command=lambda _col=col, idx=i: self.sort_column(idx))
             self.tree.column(col, anchor="center", width=100)
 
-        # Populate Treeview with current points
         for idx, point in enumerate(self.points):
             tag = 'g' if idx % 2 else 'b'
             self.tree.insert("", "end", values=(idx + 1, *point), tags=tag)
 
-        # Configure alternating row colors
         self.tree.tag_configure('g', background='#78de98')
         self.tree.tag_configure('b', background='#3297a8')
 
-        # Pack Treeview to display table
         self.tree.pack(fill="x")
 
     def sort_column(self, col_index):
-        # Toggle sorting direction for each criterion independently
         if not hasattr(self, "sort_orders"):
             self.sort_orders = {}
 
-        # Set or toggle the sorting order for the chosen column
         self.sort_orders[col_index] = not self.sort_orders.get(col_index, False)
 
-        # Sort points based only on the selected criterion
         self.points.sort(key=lambda x: x[col_index - 1], reverse=self.sort_orders[col_index])
 
-        # Refresh the table to reflect the sorted data
         self.display_table()
 
     def parse_input(self):
         raw_data = self.dataset_entry.get()
         try:
-            # Parse input string into a list of tuples
             points = eval(f"[{raw_data}]")
             if not all(isinstance(pt, tuple) and all(isinstance(x, (int, float)) for x in pt) for pt in points):
                 raise ValueError
@@ -275,18 +246,17 @@ class GUI:
             return None
 
     def show_input(self):
-        # Parse input, update points, and display them in the table
         points = self.parse_input()
         if points:
-            self.points = points  # Update internal data
-            self.display_table()  # Refresh table with new data
+            self.points = points  
+            self.display_table()  
 
     def add_point(self):
         try:
             new_point = eval(f"({self.add_entry.get()})")
             if isinstance(new_point, tuple) and all(isinstance(x, (int, float)) for x in new_point):
-                self.points.append(new_point)  # Update internal data
-                self.display_table()  # Refresh table to show added point
+                self.points.append(new_point) 
+                self.display_table()  
                 self.add_entry.delete(0, tk.END)
             else:
                 raise ValueError
@@ -304,8 +274,8 @@ class GUI:
             if isinstance(updated_point, tuple) and all(isinstance(x, (int, float)) for x in updated_point):
                 item_id = selected_item[0]
                 index = int(self.tree.item(item_id, 'values')[0]) - 1
-                self.points[index] = updated_point  # Update internal data list
-                self.display_table()  # Refresh table to show updated point
+                self.points[index] = updated_point 
+                self.display_table()  
                 self.update_entry.delete(0, tk.END)
             else:
                 raise ValueError
@@ -320,99 +290,92 @@ class GUI:
 
         item_id = selected_item[0]
         index = int(self.tree.item(item_id, 'values')[0]) - 1
-        del self.points[index]  # Remove point from internal list
-        self.display_table()  # Refresh table to show deletion
+        del self.points[index]  
+        self.display_table()  
     
     def benchmark(self):
-        # Run each algorithm and store results
         benchmarks = [
             ("Algorytm bez filtracji", *self.run_naive()),
             ("Algorytm z filtracją punktów zdominowanych", *self.run_dominated()),
             ("Algorytm oparty o punkt idealny", *self.run_ideal())
         ]
 
-        # Create a new window for displaying the benchmark results
         benchmark_window = tk.Toplevel(self.root)
         benchmark_window.title("Benchmark Results")
 
-        # Set up the Treeview widget
         columns = ("Algorithm", "Execution Time (ms)", "Number of Comparisons")
         tree = ttk.Treeview(benchmark_window, columns=columns, show="headings")
         tree.heading("Algorithm", text="Algorithm")
         tree.heading("Execution Time (ms)", text="Execution Time (ms)")
         tree.heading("Number of Comparisons", text="Number of Comparisons")
         
-        # Insert benchmark data into the Treeview
         for algo_name, exec_time, comparisons in benchmarks:
             tree.insert("", "end", values=(algo_name, f"{exec_time:.2f}", comparisons))
         
-        # Pack and display the Treeview
         tree.pack(padx=10, pady=10, fill="both", expand=True)
 
     def plot_button_action(self):
-        # Wrapper function that calls plot_points with the correct arguments
         self.plot_points(self.points, self.output_points)
-                
+
     def plot_points(self, input_points, output_points):
         '''
         Plots input and output points in 2D or 3D.
-        Different colors are used for each distinct group in output points.
+        Different markers/colors are used to represent higher dimensions.
 
         Parameters:
             input_points (List[Tuple[float, ...]]): List of tuples representing input points.
             output_points (List[Tuple[float, ...]]): List of tuples representing output points.
         '''
-        # Helper function to convert MyTuple to a tuple
         def to_tuple(point):
             if isinstance(point, MyTuple):
-                return point.data  # Access the `data` attribute which contains the tuple
+                return point.data
             return point
 
-        # Convert MyTuple instances to tuples
         input_points = [to_tuple(point) for point in input_points]
-        output_points = [to_tuple(point) for point in output_points]  # Treat output_points as a flat list
+        output_points = [to_tuple(point) for point in output_points]
 
-        # Check dimensionality of points
-        is_3d = len(input_points[0]) == 3  # Assume points are consistent in dimensions
+        max_dim = max(len(input_points[0]), len(output_points[0]))
+        is_3d = max_dim >= 3  
 
-        # Set up plot
+        def project_to_3d(point):
+            return (point[0], point[1], point[2]) if len(point) > 2 else (point[0], point[1], 0)
+
+        if is_3d:
+            input_points = [project_to_3d(point) for point in input_points]
+            output_points = [project_to_3d(point) for point in output_points]
+
         fig = plt.figure()
         if is_3d:
             ax = fig.add_subplot(111, projection='3d')
-            ax.set_xlabel("X-axis")
-            ax.set_ylabel("Y-axis")
             ax.set_zlabel("Z-axis")
         else:
             ax = fig.add_subplot(111)
-            ax.set_xlabel("X-axis")
-            ax.set_ylabel("Y-axis")
 
-        # Plot input points in blue
-        if is_3d:
-            ax.scatter([p[0] for p in input_points], [p[1] for p in input_points], [p[2] for p in input_points], 
-                    color='blue', label='Input Points', alpha=0.6)
-        else:
-            ax.scatter([p[0] for p in input_points], [p[1] for p in input_points], 
-                    color='blue', label='Input Points', alpha=0.6)
+        ax.set_xlabel("X-axis")
+        ax.set_ylabel("Y-axis")
 
-        # Plot output points in a different color
-        if is_3d:
-            ax.scatter([p[0] for p in output_points], [p[1] for p in output_points], [p[2] for p in output_points], 
-                    color='red', label='Output Points', alpha=0.6)
-        else:
-            ax.scatter([p[0] for p in output_points], [p[1] for p in output_points], 
-                    color='red', label='Output Points', alpha=0.6)
+        input_color = 'blue'
+        output_color = 'red'
 
-        # Add legend and show plot
+        for point in input_points:
+            x, y = point[0], point[1]
+            z = point[2] if is_3d else None
+            if is_3d:
+                ax.scatter(x, y, z, color=input_color, marker='o', alpha=0.6, label="Input Points" if 'Input Points' not in ax.get_legend_handles_labels()[1] else "")
+            else:
+                ax.scatter(x, y, color=input_color, marker='o', alpha=0.6, label="Input Points" if 'Input Points' not in ax.get_legend_handles_labels()[1] else "")
+
+        for point in output_points:
+            x, y = point[0], point[1]
+            z = point[2] if is_3d else None
+            if is_3d:
+                ax.scatter(x, y, z, color=output_color, marker='^', alpha=0.6, label="Output Points" if 'Output Points' not in ax.get_legend_handles_labels()[1] else "")
+            else:
+                ax.scatter(x, y, color=output_color, marker='^', alpha=0.6, label="Output Points" if 'Output Points' not in ax.get_legend_handles_labels()[1] else "")
+
         plt.legend()
         plt.show()
 
-
-
-
-
-
-# Initialize the GUI
 root = tk.Tk()
 gui = GUI(root)
 root.mainloop()
