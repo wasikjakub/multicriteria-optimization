@@ -212,24 +212,28 @@ class RSM:
     
     
 class Topsis:
+    def __init__(self, daneA, daneK):
+        self.daneA = daneA
+        self.daneK = daneK
+    
     # Funkcja TOPSIS
-    def licz_topsis(daneA, daneK):
+    def licz_topsis(self):
         # Określenie wielkości problemu
-        liczba_alternatyw, ilosc_kolumn = daneA.shape
+        liczba_alternatyw, ilosc_kolumn = self.daneA.shape
         ilosc_kryteriow = ilosc_kolumn - 2  # Omiń ID i placeholder
 
-        liczba_klas, ilosc_kryteriow_k = daneK.shape
+        liczba_klas, ilosc_kryteriow_k = self.daneK.shape
 
         # Sprawdzenie punktów alternatyw
         alternatywy_ok = np.zeros(liczba_alternatyw, dtype=int)
         for i in range(liczba_alternatyw):
             alternatywy_ok[i] = all(
-                daneK[0, j] <= daneA[i, j + 2] <= daneK[1, j]
+                self.daneK[0, j] <= self.daneA[i, j + 2] <= self.daneK[1, j]
                 for j in range(ilosc_kryteriow)
             )
 
         # Filtracja alternatyw
-        alternatywy_filtrowane = daneA[alternatywy_ok == 1]
+        alternatywy_filtrowane = self.daneA[alternatywy_ok == 1]
         liczba_alternatyw_temp = alternatywy_filtrowane.shape[0]
 
         # Uzupełnienie macierzy decyzyjnej
@@ -282,11 +286,11 @@ class Topsis:
         print("Ranking:\n", ranking)
 
         # Rysowanie wyników
-        rysuj_wykres(macierz_decyzyjna, daneK)
+        # self.rysuj_wykres(macierz_decyzyjna, self.daneK)
         return ranking
 
     # Funkcja do rysowania wyników
-    def rysuj_wykres(macierz_decyzyjna, daneK):
+    def rysuj_wykres(self, macierz_decyzyjna):
         fig = plt.figure(figsize=(10, 7))
         ax = fig.add_subplot(111, projection='3d')
 
@@ -295,7 +299,7 @@ class Topsis:
                 color='blue', label='Alternatywy', s=50)
 
         # Rysowanie granic kryteriów
-        ax.scatter(daneK[0, :], daneK[1, :], daneK[1, :], 
+        ax.scatter(self.daneK[0, :], self.daneK[1, :], self.daneK[1, :], 
                 color='red', label='Granice kryteriów', s=100, marker='o')
 
         # Ustawienia wykresu
