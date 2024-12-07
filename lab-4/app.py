@@ -20,7 +20,7 @@ class RankingApp:
         method_label = tk.Label(master, text="Metoda:")
         method_label.grid(row=0, column=1, padx=5)
 
-        self.method_combobox = ttk.Combobox(master, values=["TOPSIS", "UTA_star", "RSN"], state="readonly")
+        self.method_combobox = ttk.Combobox(master, values=["TOPSIS", "UTA_star", "RSM"], state="readonly")
         self.method_combobox.set("TOPSIS")
         self.method_combobox.grid(row=0, column=2, padx=5)
 
@@ -53,8 +53,92 @@ class RankingApp:
         classes_frame = tk.LabelFrame(master, text="Klasy")
         classes_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
 
-        self.ranking_frame = tk.LabelFrame(master, text="Stworzony ranking")
-        self.ranking_frame.grid(row=2, column=2, columnspan=2, padx=10, pady=10, sticky="nsew")
+        # Replace this part in the __init__ method where the ranking_frame is created
+        self.ranking_canvas = tk.Canvas(master)
+        self.ranking_scrollbar = ttk.Scrollbar(master, orient="vertical", command=self.ranking_canvas.yview)
+        self.ranking_frame = tk.Frame(self.ranking_canvas)
+
+        self.ranking_canvas.create_window((0, 0), window=self.ranking_frame, anchor="nw")
+        self.ranking_canvas.configure(yscrollcommand=self.ranking_scrollbar.set)
+
+        self.ranking_scrollbar.grid(row=2, column=3, sticky="ns")
+        self.ranking_canvas.grid(row=2, column=2, sticky="nsew")
+
+        self.ranking_frame.bind("<Configure>", lambda e: self.ranking_canvas.configure(scrollregion=self.ranking_canvas.bbox("all")))
+
+        # Add a placeholder label for the ranking box
+        ranking_label = tk.Label(self.ranking_frame, text="Stworzony Ranking:", font=("Arial", 12, "bold"))
+        ranking_label.pack(pady=5)
+
+        placeholder_label = tk.Label(self.ranking_frame, text="Brak danych do wyświetlenia.", justify="left", fg="gray")
+        placeholder_label.pack(pady=5)
+
+
+        # Add to __init__
+        self.classes_data = {
+            "Fu_ref": np.array([
+                [30, 10, 5],
+                [40, 20, 20],
+                [20, 80, 10],
+                [60, 40, 0],
+                [30, 30, 30]
+            ]),
+            "max_min_criteria": np.array([
+                [10, 15, 20],
+                [70, 85, 90]
+            ]),
+            "pref": np.array([10, 25, 0]),
+            "pref_two": np.array([25, 40, 10]) 
+        }
+
+        self.classes_entries = {}
+
+        # Add fields for Fu_ref
+        fu_ref_label = tk.Label(classes_frame, text="Fu_ref:")
+        fu_ref_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+
+        for i, row in enumerate(self.classes_data["Fu_ref"]):
+            self.classes_entries[f"Fu_ref_row_{i}"] = []
+            for j, value in enumerate(row):
+                entry = ttk.Entry(classes_frame, width=10)
+                entry.insert(0, str(value))
+                entry.grid(row=i + 1, column=j, padx=5, pady=5)
+                self.classes_entries[f"Fu_ref_row_{i}"].append(entry)
+
+        # Add fields for max_min_criteria
+        max_min_label = tk.Label(classes_frame, text="Min/Max Criteria:")
+        max_min_label.grid(row=len(self.classes_data["Fu_ref"]) + 2, column=0, padx=5, pady=5, sticky="w")
+
+        for i, row in enumerate(self.classes_data["max_min_criteria"]):
+            self.classes_entries[f"max_min_row_{i}"] = []
+            for j, value in enumerate(row):
+                entry = ttk.Entry(classes_frame, width=10)
+                entry.insert(0, str(value))
+                entry.grid(row=len(self.classes_data["Fu_ref"]) + 3 + i, column=j, padx=5, pady=5)
+                self.classes_entries[f"max_min_row_{i}"].append(entry)
+                
+        # Add fields for pref
+        pref_label = tk.Label(classes_frame, text="Pref:")
+        pref_label.grid(row=len(self.classes_data["Fu_ref"]) + 5, column=0, padx=5, pady=5, sticky="w")
+
+        self.classes_entries["pref"] = []
+        for i, value in enumerate(self.classes_data["pref"]):
+            entry = ttk.Entry(classes_frame, width=10)
+            entry.insert(0, str(value))
+            entry.grid(row=len(self.classes_data["Fu_ref"]) + 6, column=i, padx=5, pady=5)
+            self.classes_entries["pref"].append(entry)
+
+        # Add fields for pref_two
+        pref_two_label = tk.Label(classes_frame, text="Pref Two:")
+        pref_two_label.grid(row=len(self.classes_data["Fu_ref"]) + 7, column=0, padx=5, pady=5, sticky="w")
+
+        self.classes_entries["pref_two"] = []
+        for i, value in enumerate(self.classes_data["pref_two"]):
+            entry = ttk.Entry(classes_frame, width=10)
+            entry.insert(0, str(value))
+            entry.grid(row=len(self.classes_data["Fu_ref"]) + 8, column=i, padx=5, pady=5)
+            self.classes_entries["pref_two"].append(entry)
+
 
         # Grid Configuration for Dynamic Resizing
         master.grid_rowconfigure(1, weight=1)
@@ -66,6 +150,26 @@ class RankingApp:
 
         alt_frame.grid_rowconfigure(0, weight=1)
         alt_frame.grid_columnconfigure(0, weight=1)
+
+    def get_classes_data(self):
+    # Extract Fu_ref values
+        Fu_ref = []
+        for i in range(len(self.classes_data["Fu_ref"])):
+            row = [float(entry.get()) for entry in self.classes_entries[f"Fu_ref_row_{i}"]]
+            Fu_ref.append(row)
+        Fu_ref = np.array(Fu_ref)
+
+        # Extract max_min_criteria values
+        max_min_criteria = []
+        for i in range(len(self.classes_data["max_min_criteria"])):
+            row = [float(entry.get()) for entry in self.classes_entries[f"max_min_row_{i}"]]
+            max_min_criteria.append(row)
+        max_min_criteria = np.array(max_min_criteria)
+        
+        pref = np.array([float(entry.get()) for entry in self.classes_entries["pref"]])
+        pref_two = np.array([float(entry.get()) for entry in self.classes_entries["pref_two"]])
+
+        return Fu_ref, max_min_criteria, pref, pref_two
 
     def load_file(self):
         try:
@@ -92,43 +196,72 @@ class RankingApp:
             return
 
         method = self.method_combobox.get()
+
+        # Extract Fu_ref and max_min_criteria from GUI
+        Fu_ref, max_min_criteria, pref, pref_two = self.get_classes_data()
+
         if method == "TOPSIS":
             # Extract relevant data
             criteria_data = self.data[["Kryterium 1", "Kryterium 1.1", "Kryterium 2", "Kryterium 3"]].to_numpy()
             criteria_data = np.insert(criteria_data, 1, 0, axis=1)
-            print(criteria_data)
-            
-            daneA = np.array([
-                [1, 0, 55, 60, 70],
-                [2, 0, 65, 75, 80],
-                [3, 0, 50, 65, 60],
-                [4, 0, 70, 85, 90],
-                [5, 0, 60, 55, 65]
-            ])
-            print(daneA)
-            
-            max_min_criteria = np.array([
-                [10, 15, 20],  # Minimalne wartości kryteriów
-                [70, 85, 90]   # Maksymalne wartości kryteriów
-            ])
 
-            # Run TOPSIS algorithm
+            # Run TOPSIS algorithm with user-provided max_min_criteria
             topsis = Topsis(criteria_data, max_min_criteria)
             rankings = topsis.licz_topsis()
-            print(rankings)
 
-            # Display rankings in "Stworzony ranking" frame
+            # Display rankings in the "Ranking" box
             for widget in self.ranking_frame.winfo_children():
                 widget.destroy()  # Clear previous content
 
-            ranking_label = tk.Label(self.ranking_frame, text="Ranking:")
-            ranking_label.pack()
+            ranking_label = tk.Label(self.ranking_frame, text="Stworzony Ranking:", font=("Arial", 12, "bold"))
+            ranking_label.pack(pady=5)
 
             ranking_text = "\n".join(f"Alternatywa {int(rank[0])}: {np.round(rank[1], 2)}" for rank in rankings)
-            ranking_display = tk.Label(self.ranking_frame, text=ranking_text)
-            ranking_display.pack()
+            ranking_display = tk.Label(self.ranking_frame, text=ranking_text, justify="left")
+            ranking_display.pack(pady=5)
+
+        elif method == "UTA_star":
+            Fu = self.data[["Kryterium 1.1", "Kryterium 2", "Kryterium 3"]].to_numpy()
+
+            # Run UTA* algorithm with user-provided Fu_ref
+            utastar = UtaStar(Fu, Fu_ref)
+            U, _, ranking = utastar.UTASTAR()
+
+            # Display rankings in the "Stworzony Ranking" frame
+            for widget in self.ranking_frame.winfo_children():
+                widget.destroy()  # Clear previous content
+
+            ranking_label = tk.Label(self.ranking_frame, text="Stworzony Ranking:", font=("Arial", 12, "bold"))
+            ranking_label.pack(pady=5)
+
+            rankings = []
+            for i in range(len(U)):
+                rankings.append((U[i], ranking[i]))
+            rankings.sort(key=lambda x: x[1])
+
+            ranking_text = "\n".join(f"Alternatywa {int(rank[1])}: {np.round(rank[0], 2)}" for rank in rankings)
+            ranking_display = tk.Label(self.ranking_frame, text=ranking_text, justify="left")
+            ranking_display.pack(pady=5)
+
+        elif method == "RSM":
+            data = self.data[["Kryterium 1.1", "Kryterium 2", "Kryterium 3"]].to_numpy()
+            
+            rsm = RSM(data, pref, pref_two)
+            rankings = np.unique(rsm.determine_sets(), axis=0)
+            
+            for widget in self.ranking_frame.winfo_children():
+                widget.destroy()  # Clear previous content
+
+            ranking_label = tk.Label(self.ranking_frame, text="Stworzony Ranking:", font=("Arial", 12, "bold"))
+            ranking_label.pack(pady=5)
+            
+            ranking_text = "\n".join(f"Alternatywa: {str(rank)}" for _, rank in enumerate(rankings))
+            ranking_display = tk.Label(self.ranking_frame, text=ranking_text, justify="left")
+            ranking_display.pack(pady=5)
+            
         else:
             print(f"Method {method} is not implemented yet.")
+
 
 # Run the Application
 if __name__ == "__main__":

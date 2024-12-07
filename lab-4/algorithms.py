@@ -6,7 +6,12 @@ from copy import deepcopy
 
 
 class RSM:
-    def get_rank(A1, A2, D):
+    def __init__(self, data, pref, pref_qwo):
+        self.data = data
+        self.pref = pref
+        self.pref_qwo = pref_qwo
+
+    def get_rank(self, A1, A2, D):
         n_alternatives, n_criteria = D.shape
         M1 = []
         M2 = []
@@ -56,7 +61,7 @@ class RSM:
         return np.array(M2) if M2 else A1
 
 
-    def get_incomparable_for_preference(D, pref):
+    def get_incomparable_for_preference(self, D, pref):
         n_alternatives, n_criteria = D.shape
         incomparable_points = np.array([])
 
@@ -73,14 +78,14 @@ class RSM:
         return incomparable_points
 
 
-    def internal_contradiction(A):
+    def internal_contradiction(self, A):
         n_criteria = A.shape[1]
-        incomparable_points_part = get_incomparable_points(A)
+        incomparable_points_part = self.get_incomparable_points(A)
         non_dominated_point = incomparable_points_part[0, :]
         incomparable_points = non_dominated_point.reshape((1, n_criteria))
 
         while incomparable_points_part.shape[0] > 2:
-            incomparable_points_part = get_incomparable_points(incomparable_points_part[1:, :])
+            incomparable_points_part = self.get_incomparable_points(incomparable_points_part[1:, :])
             non_dominated_point = incomparable_points_part[0,:]
             incomparable_points = np.concatenate((non_dominated_point.reshape((1, n_criteria)), incomparable_points), axis=0)
 
@@ -90,7 +95,7 @@ class RSM:
         return incomparable_points
 
 
-    def external_contradiction(A, B):
+    def external_contradiction(self, A, B):
         n_criteria = A.shape[1]
         new_A = []
 
@@ -117,7 +122,7 @@ class RSM:
         return np.array(new_A)
 
 
-    def reverse_criteria(D, directions):
+    def reverse_criteria(self, D, directions):
         for i, direction in enumerate(directions):
             if direction == "max":
                 D[:, i] = -D[:, i]
@@ -125,7 +130,7 @@ class RSM:
         return D
 
 
-    def get_incomparable_points(D):
+    def get_incomparable_points(self, D):
         n_alternatives, n_criteria = D.shape
         incomparable_points = D[0,:].reshape((1, n_criteria))
         non_dominated_point = D[0,:]
@@ -146,22 +151,22 @@ class RSM:
 
                 else:
                     incomparable_points_old = np.concatenate((non_dominated_point.reshape((1, n_criteria)), incomparable_points_old), axis=0)
-                    incomparable_points = get_incomparable_points(incomparable_points_old)
+                    incomparable_points = self.get_incomparable_points(incomparable_points_old)
 
         return incomparable_points
 
 
-    def get_best_points(D, direction, n_criteria):
+    def get_best_points(self, D, direction, n_criteria):
         if direction == 'max':
             D = -D
 
-        incomparable_points = get_incomparable_points(D)
+        incomparable_points = self.get_incomparable_points(D)
         non_dominated_point = incomparable_points[0, :]
         incomparable_points_part = incomparable_points
         incomparable_points = non_dominated_point.reshape((1, n_criteria))
 
         while incomparable_points_part.shape[0] > 2:
-            incomparable_points_part = get_incomparable_points(incomparable_points_part[1:, :])
+            incomparable_points_part = self.get_incomparable_points(incomparable_points_part[1:, :])
             non_dominated_point = incomparable_points_part[0, :]
             incomparable_points = np.concatenate((non_dominated_point.reshape((1, n_criteria)), incomparable_points), axis=0)
 
@@ -171,42 +176,42 @@ class RSM:
         return -incomparable_points if direction == "max" else incomparable_points
 
 
-    def determine_sets(pref, pref_qwo, D, directions):
-        D = reverse_criteria(D, directions)
+    def determine_sets(self, directions=['min', 'min', 'min']):
+        D = self.reverse_criteria(self.data, directions)
         n_criteria = D.shape[1]
 
-        A0 = get_best_points(D, 'min', n_criteria)
-        A3 = get_best_points(D, 'max', n_criteria)
+        A0 = self.get_best_points(D, 'min', n_criteria)
+        A3 = self.get_best_points(D, 'max', n_criteria)
 
-        A1 = get_incomparable_for_preference(D, pref)
-
-        if A1.shape[0] == 0:
-            A1 = deepcopy(A0)
-
-        A1 = internal_contradiction(A1)
-        A1 = external_contradiction(A1, A0)
+        A1 = self.get_incomparable_for_preference(D, self.pref)
 
         if A1.shape[0] == 0:
             A1 = deepcopy(A0)
 
-        A2 = get_incomparable_for_preference(D, pref_qwo)
+        A1 = self.internal_contradiction(A1)
+        A1 = self.external_contradiction(A1, A0)
+
+        if A1.shape[0] == 0:
+            A1 = deepcopy(A0)
+
+        A2 = self.get_incomparable_for_preference(D, self.pref_qwo)
 
         if A2.shape[0] == 0:
             A2 = deepcopy(A3)
 
-        A2 = internal_contradiction(A2)
-        A2 = external_contradiction(A2, A1)
+        A2 = self.internal_contradiction(A2)
+        A2 = self.external_contradiction(A2, A1)
 
         if A2.shape[0] == 0:
             A2 = deepcopy(A3)
 
-        M = get_rank(A1, A2, D)
+        M = self.get_rank(A1, A2, D)
 
         if M.shape[0] == 0:
             M = deepcopy(A1)
 
         if 'max' in directions:
-            M = reverse_criteria(M, directions)
+            M = self.reverse_criteria(M, directions)
 
         return M
     
@@ -312,7 +317,16 @@ class Topsis:
 
 
 class UtaStar:
-    def cut_criterion_interval(g_min, g_max, minMax, intervals):
+    def __init__(self, Fu, Fu_ref, minMax=['min', 'min', 'min'], intervals=[2, 3, 3], ranks=[1, 2, 3, 4, 5], delta=0.05, acc=1000):
+        self.Fu = Fu
+        self.Fu_ref = Fu_ref
+        self.minMax = minMax
+        self.intervals = intervals
+        self.ranks = ranks
+        self.delta = delta
+        self.acc = acc
+        
+    def cut_criterion_interval(self, g_min, g_max, minMax, intervals):
         g = []
         for j in range(intervals + 1):
             g_i = g_min + ((j) / intervals) * (g_max - g_min)
@@ -322,33 +336,33 @@ class UtaStar:
                 g.append(g_i)
         return g
 
-    def UTASTAR(Fu, Fu_ref, ranks, minMax, intervals, delta, acc):
-        if Fu.shape[1] != Fu_ref.shape[1]:
+    def UTASTAR(self):
+        if self.Fu.shape[1] != self.Fu_ref.shape[1]:
             raise ValueError("The number of criteria in Fu and Fu_ref is different")
 
-        # Dimensions
-        il_pkt, il_kryt = Fu_ref.shape
+       # Dimensions
+        il_pkt, il_kryt = self.Fu_ref.shape
 
         w = []
         for i in range(il_kryt):
-            w_i = np.zeros((il_pkt, intervals[i]))
-            g_i = cut_criterion_interval(min(Fu_ref[:, i]), max(Fu_ref[:, i]), minMax[i], intervals[i])
+            w_i = np.zeros((il_pkt, self.intervals[i]))
+            g_i = self.cut_criterion_interval(min(self.Fu_ref[:, i]), max(self.Fu_ref[:, i]), self.minMax[i], self.intervals[i])
             
             for k in range(il_pkt):
-                if Fu_ref[k, i] not in g_i:
+                if self.Fu_ref[k, i] not in g_i:
                     lower_b, upper_b = 0, 0
                     for j in range(len(g_i)):
-                        if Fu_ref[k, i] > g_i[j]:
-                            if minMax[i] == "min":
+                        if self.Fu_ref[k, i] > g_i[j]:
+                            if self.minMax[i] == "min":
                                 lower_b, upper_b = j, j - 1
-                            elif minMax[i] == "max":
+                            elif self.minMax[i] == "max":
                                 lower_b, upper_b = j, j + 1
                     
-                    for j in range(intervals[i] - 1):
+                    for j in range(self.intervals[i] - 1):
                         w_i[k, j] = 1
-                    w_i[k, intervals[i] - 1] = (Fu_ref[k, i] - g_i[upper_b]) / (g_i[lower_b] - g_i[upper_b])
+                    w_i[k, self.intervals[i] - 1] = (self.Fu_ref[k, i] - g_i[upper_b]) / (g_i[lower_b] - g_i[upper_b])
                 else:
-                    index = g_i.index(Fu_ref[k, i])
+                    index = g_i.index(self.Fu_ref[k, i])
                     if index != 0:
                         for j in range(index):
                             w_i[k, j] = 1
@@ -359,10 +373,10 @@ class UtaStar:
 
         A, b, Aeq, beq = [], [], [], []
         for i in range(il_pkt - 1):
-            if ranks[i] != ranks[i + 1]:
+            if self.ranks[i] != self.ranks[i + 1]:
                 A_i = w[i] - w[i + 1]
                 A.append(A_i)
-                b.append(delta)
+                b.append(self.delta)
             else:
                 Aeq_i = w[i] - w[i + 1]
                 Aeq.append(Aeq_i)
@@ -379,8 +393,8 @@ class UtaStar:
         tmp_start = 0
         for i in range(il_kryt):
             z = np.zeros(w.shape[1])
-            z[tmp_start:tmp_start + intervals[i]] = -1
-            tmp_start += intervals[i]
+            z[tmp_start:tmp_start + self.intervals[i]] = -1
+            tmp_start += self.intervals[i]
 
             # Correct bounds
             bounds = [(lb[j], ub[j]) for j in range(len(lb))]
@@ -400,13 +414,13 @@ class UtaStar:
         for i in range(il_kryt):
             # plt.figure()
             
-            g_i = cut_criterion_interval(min(Fu_ref[:, i]), max(Fu_ref[:, i]), minMax[i], intervals[i])
+            g_i = self.cut_criterion_interval(min(self.Fu_ref[:, i]), max(self.Fu_ref[:, i]), self.minMax[i], self.intervals[i])
             u_g_i_j = [0]
             for j in range(1, len(g_i)):
                 u_g_i_j.append(u_g_i_j[j - 1] + x_avg[tmp])
                 tmp += 1
 
-            x1 = np.linspace(g_i[0], g_i[-1], acc)
+            x1 = np.linspace(g_i[0], g_i[-1], self.acc)
             y1 = np.interp(x1, g_i, u_g_i_j)
             # plt.plot(g_i, u_g_i_j, '*', label='Points')
             # plt.plot(x1, y1, label='Interpolated')
@@ -418,11 +432,11 @@ class UtaStar:
             u_g.append((x1, y1))
 
         U = []
-        for i in range(Fu.shape[0]):
+        for i in range(self.Fu.shape[0]):
             temp = 0
             for j in range(il_kryt):
                 x_vals, y_vals = u_g[j]
-                temp += np.interp(Fu[i, j], x_vals, y_vals)
+                temp += np.interp(self.Fu[i, j], x_vals, y_vals)
             U.append(temp)
 
         ranking = np.argsort(-np.array(U)) + 1
