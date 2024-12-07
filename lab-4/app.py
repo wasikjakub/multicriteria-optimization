@@ -202,7 +202,7 @@ class RankingApp:
 
         if method == "TOPSIS":
             # Extract relevant data
-            criteria_data = self.data[["Kryterium 1", "Kryterium 1.1", "Kryterium 2", "Kryterium 3"]].to_numpy()
+            criteria_data = self.data[["Nr alternatywy", "Kryterium 1", "Kryterium 2", "Kryterium 3"]].to_numpy()
             criteria_data = np.insert(criteria_data, 1, 0, axis=1)
 
             # Run TOPSIS algorithm with user-provided max_min_criteria
@@ -221,7 +221,7 @@ class RankingApp:
             ranking_display.pack(pady=5)
 
         elif method == "UTA_star":
-            Fu = self.data[["Kryterium 1.1", "Kryterium 2", "Kryterium 3"]].to_numpy()
+            Fu = self.data[["Kryterium 1", "Kryterium 2", "Kryterium 3"]].to_numpy()
 
             # Run UTA* algorithm with user-provided Fu_ref
             utastar = UtaStar(Fu, Fu_ref)
@@ -244,7 +244,7 @@ class RankingApp:
             ranking_display.pack(pady=5)
 
         elif method == "RSM":
-            data = self.data[["Kryterium 1.1", "Kryterium 2", "Kryterium 3"]].to_numpy()
+            data = self.data[["Kryterium 1", "Kryterium 2", "Kryterium 3"]].to_numpy()
             
             rsm = RSM(data, pref, pref_two)
             rankings = np.unique(rsm.determine_sets(), axis=0)
