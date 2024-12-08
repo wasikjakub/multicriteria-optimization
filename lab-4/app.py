@@ -77,11 +77,11 @@ class RankingApp:
         # Add to __init__
         self.classes_data = {
             "Fu_ref": np.array([
-                [30, 10, 5],
-                [40, 20, 20],
-                [20, 80, 10],
-                [60, 40, 0],
-                [30, 30, 30]
+                [15, 5, 5],
+                [20, 10, 10],
+                [10, 40, 50],
+                [30, 20, 0],
+                [15, 15, 15]
             ]),
             "max_min_criteria": np.array([
                 [10, 15, 20],
@@ -208,6 +208,7 @@ class RankingApp:
             # Run TOPSIS algorithm with user-provided max_min_criteria
             topsis = Topsis(criteria_data, max_min_criteria)
             rankings = topsis.licz_topsis()
+            rankings = rankings[rankings[:, 1].argsort()[::-1]]
 
             # Display rankings in the "Ranking" box
             for widget in self.ranking_frame.winfo_children():
